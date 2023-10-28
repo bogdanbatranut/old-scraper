@@ -28,6 +28,7 @@ func GetCars(sc pagination.Pagination) ([]ads.Ad, bool, bool) {
 	})
 
 	collector.OnHTML("article", func(e *colly.HTMLElement) {
+		log.Println("On HTML....")
 		carAd := ads.Ad{
 			Brand: sc.SearchCriteria.Brand,
 			Model: sc.SearchCriteria.Model,
@@ -113,9 +114,17 @@ func GetCars(sc pagination.Pagination) ([]ads.Ad, bool, bool) {
 	})
 	var bodyArr []byte
 	collector.OnResponse(func(response *colly.Response) {
-		log.Println("On Response: ", sc.ToURL())
+		//log.Println("On Response: ", sc.ToURL())
+		//log.Println("Sleeping...")
+		//time.Sleep(2 * time.Second)
 		log.Println(fmt.Sprintf("Status code : %d", response.StatusCode))
 		bodyArr = response.Body
+	})
+
+	collector.OnRequest(func(response *colly.Request) {
+		log.Println("On Request: ", sc.ToURL())
+		log.Println("Sleeping...")
+		time.Sleep(2 * time.Second)
 	})
 
 	//collector.Visit("https://www.autovit.ro/autoturisme/volvo/xc-60/de-la-2019?search%5Bfilter_enum_fuel_type%5D=diesel&search%5Bfilter_float_mileage%3Ato%5D=125000")
