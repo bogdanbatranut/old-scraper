@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,9 +12,14 @@ import (
 	"old-scraper/pkg/config"
 	"old-scraper/pkg/criteria"
 	"old-scraper/pkg/dbmodels"
+	"old-scraper/pkg/notifications"
 	"old-scraper/pkg/pagination"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -43,6 +49,26 @@ func main() {
 		log.Panicln(err)
 	}
 
+	ntfyHost := cfg.GetString(config.NTFYHost)
+	ntfyPort := cfg.GetString(config.NTFYPort)
+	ntfyServiceStatusTopic := cfg.GetString(config.NTFYServiceStatusTopic)
+
+	ntfyURL := fmt.Sprintf("http://%s:%s/%s", ntfyHost, ntfyPort, ntfyServiceStatusTopic)
+
+	criteriaTopicName := "criteria"
+	criteriaNoticationURL := fmt.Sprintf("http://%s:%s/%s", ntfyHost, ntfyPort, criteriaTopicName)
+	criteriaNotificationService := notifications.NewNotificationService(criteriaNoticationURL)
+
+	http.Post(ntfyURL, "text/plain",
+		strings.NewReader("Service Old autovit STARTED 😀"))
+
+	done := make(chan bool, 1)
+
+	signalsChannel := make(chan os.Signal, 1)
+	signal.Notify(signalsChannel, syscall.SIGINT, syscall.SIGTERM)
+	log.Println("start waiting for signal")
+	_, cancel := context.WithCancel(context.Background())
+
 	dbUserName := cfg.GetString(config.DBUsername)
 	dbPass := cfg.GetString(config.DBPass)
 	dbHost := cfg.GetString(config.DBHost)
@@ -54,25 +80,47 @@ func main() {
 	scRepo := criteria.NewSearchCriteriaRepo(db)
 
 	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/start", start(scRepo)).Methods("GET")
+	r.HandleFunc("/start", start(scRepo, criteriaNotificationService, cfg)).Methods("GET")
+	r.HandleFunc("/startcriteria/{id}", startCriteria(scRepo, criteriaNotificationService, cfg)).Methods("GET")
 
 	port := cfg.GetString(config.HTTPPort)
-	log.Println(fmt.Sprintf("Listening on port %s", port))
-	err = http.ListenAndServe(fmt.Sprintf(":%s", port), r)
-	if err != nil {
-		panic(err)
-	}
+
+	go func() {
+		log.Println(fmt.Sprintf("Listening on port %s", port))
+		err = http.ListenAndServe(fmt.Sprintf(":%s", port), r)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	go func() {
+		log.Println("Waiting for signal")
+		sig := <-signalsChannel
+		log.Println("Got signal:", sig)
+		log.Println("Terminating...")
+		http.Post(ntfyURL, "text/plain",
+			strings.NewReader("Service Old autovit STOPPED 😡"))
+		cancel()
+		done <- true
+	}()
+
+	<-done
 
 }
 
-func start(criteriaRepo *criteria.SearchCriteriaRepo) http.HandlerFunc {
+func startCriteria(criteriaRepo *criteria.SearchCriteriaRepo, criteriaNotificationService *notifications.NotificationsService, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		criterias := criteriaRepo.GetCriterias()
+
+		id := getID(w, r)
+		criteria := criteriaRepo.GetCriteria(uint(id))
+
+		criteriaNotificationService.PushTextNotification(fmt.Sprintf("Started getting data for criteriaId: %d, %s, %s", id, criteria.Brand, criteria.Model))
+
 		carsMap := make(map[string][]dbmodels.Car)
-		for _, criteria := range *criterias {
-			cars := crawl(criteria, criteriaRepo.DB)
-			carsMap["added"] = append(carsMap["added"], cars["added"]...)
-		}
+		cars := getDataForCriteria(*criteria, criteriaRepo.DB, criteriaNotificationService, cfg)
+		carsMap["added"] = append(carsMap["added"], cars["added"]...)
+		criteriaNotificationService.PushTextNotification(fmt.Sprintf("Done getting data for criteriaId: %d, %s, %s", id, criteria.Brand, criteria.Model))
+
 		res, err := json.Marshal(&carsMap)
 		if err != nil {
 			panic(err)
@@ -81,7 +129,26 @@ func start(criteriaRepo *criteria.SearchCriteriaRepo) http.HandlerFunc {
 	}
 }
 
-func crawl(criteria criteria.SearchCriteria, db *gorm.DB) map[string][]dbmodels.Car {
+func start(criteriaRepo *criteria.SearchCriteriaRepo, criteriaNotificationService *notifications.NotificationsService, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		criteriaNotificationService.PushTextNotification("Started getting data for criterias")
+		criterias := criteriaRepo.GetCriterias()
+		carsMap := make(map[string][]dbmodels.Car)
+		for _, criteria := range *criterias {
+			cars := getDataForCriteria(criteria, criteriaRepo.DB, criteriaNotificationService, cfg)
+			carsMap["added"] = append(carsMap["added"], cars["added"]...)
+		}
+		criteriaNotificationService.PushTextNotification("Done getting data for criterias")
+
+		res, err := json.Marshal(&carsMap)
+		if err != nil {
+			panic(err)
+		}
+		w.Write(res)
+	}
+}
+
+func getDataForCriteria(criteria criteria.SearchCriteria, db *gorm.DB, notificationService *notifications.NotificationsService, cfg config.Config) map[string][]dbmodels.Car {
 
 	today := time.Now().Format("2006-01-02")
 
@@ -90,8 +157,14 @@ func crawl(criteria criteria.SearchCriteria, db *gorm.DB) map[string][]dbmodels.
 
 	carsMap := upsertExistingCarAds(foundCarAds, db, today)
 
-	disableExistingCarAds(foundCarAds, db, today, criteria)
-
+	err := disableExistingCarAds(foundCarAds, db, criteria)
+	if err != nil {
+		criteriaErrMessage := fmt.Sprintf("Failed to get criteria: %s %s", criteria.Brand, criteria.Model)
+		retryURL := fmt.Sprintf("http://%s/startcriteria/%d", cfg.GetString(config.AppURL), criteria.ID)
+		notificationService.PushErrRetryNotification(criteriaErrMessage, retryURL)
+	}
+	criteriaEndMessage := fmt.Sprintf("Done with criteria: %s %s", criteria.Brand, criteria.Model)
+	notificationService.PushSuccessNotification(criteriaEndMessage)
 	return carsMap
 
 }
@@ -246,7 +319,7 @@ func getCarAds(criteria criteria.SearchCriteria) []ads.Ad {
 	return foundCarAds
 }
 
-func disableExistingCarAds(foundCarAds []ads.Ad, db *gorm.DB, today string, criteria criteria.SearchCriteria) {
+func disableExistingCarAds(foundCarAds []ads.Ad, db *gorm.DB, criteria criteria.SearchCriteria) error {
 	var existingAds []dbmodels.Car
 	db.Table("cars").
 		Where(&dbmodels.Car{Active: true, Brand: criteria.Brand, CarModel: criteria.Model, Fuel: criteria.Fuel}).
@@ -256,7 +329,7 @@ func disableExistingCarAds(foundCarAds []ads.Ad, db *gorm.DB, today string, crit
 		log.Println("something went wrong... ")
 		log.Println(fmt.Sprintf("Rescrape for %s %s ", criteria.Brand, criteria.Model))
 		log.Println(fmt.Sprintf("Found cars : %d -> Existing cars:  %d ", len(foundCarAds), len(existingAds)))
-		return
+		return errors.New("Failed for criteria ")
 	}
 
 	for _, existingCarAd := range existingAds {
@@ -276,4 +349,20 @@ func disableExistingCarAds(foundCarAds []ads.Ad, db *gorm.DB, today string, crit
 			}
 		}
 	}
+	return nil
+}
+
+func getID(w http.ResponseWriter, r *http.Request) uint64 {
+	vars := mux.Vars(r)
+	idStr, ok := vars["id"]
+	if !ok {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+	}
+
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		http.Error(w, "must be integer", http.StatusBadRequest)
+	}
+
+	return id
 }

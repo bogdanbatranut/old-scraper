@@ -5,10 +5,18 @@
 
 # Defining your config values. The key defined in your config.go will be split at 
 # all dots. So our example of app.example will look like this:
+app:
+    url: "www.dev.auto-mall.ro:3333"
 db:
-    username: "root"
-    pass: "rootpass"
-    host: "127.0.0.1"
+    username: "dev"
+    pass: "siana1316"
+    host: "dev.auto-mall.ro"
     name: "autovit"
 http:
     port: "3333"
+ntfy:
+    host: "dev.auto-mall.ro"
+    port: "3111"
+    topic:
+        serviceStatus: "serviceStatus"
+        cars: "cars"

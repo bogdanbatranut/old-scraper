@@ -5,6 +5,7 @@ import (
 )
 
 type SearchCriteria struct {
+	ID           uint
 	Brand        string
 	Model        string
 	YearFrom     int `gorm:"column:yearfrom"`
@@ -27,6 +28,17 @@ func (repo SearchCriteriaRepo) GetCriterias() *[]SearchCriteria {
 	var sc *[]SearchCriteria
 
 	result := repo.DB.Where("allow_process", true).Find(&sc)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+
+	return sc
+}
+
+func (repo SearchCriteriaRepo) GetCriteria(id uint) *SearchCriteria {
+	var sc *SearchCriteria
+
+	result := repo.DB.First(&sc, id)
 	if result.Error != nil {
 		panic(result.Error)
 	}

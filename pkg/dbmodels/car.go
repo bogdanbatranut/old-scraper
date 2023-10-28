@@ -17,3 +17,7 @@ type Car struct {
 	SellerID    uint
 	Seller      *Seller `gorm:"foreignKey:seller_id"`
 }
+
+func (c Car) ToNotification() {
+
+}
