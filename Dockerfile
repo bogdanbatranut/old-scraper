@@ -15,10 +15,10 @@ COPY . .
 RUN go mod download
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o old-scraper cmd/old-scraper/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o graphql cmd/graphql/graphql.go
 
 FROM scratch
 
-COPY --from=builder /app/old-scraper .
+COPY --from=builder /app/graphql .
 
-ENTRYPOINT ["./old-scraper"]
+ENTRYPOINT ["./graphql"]

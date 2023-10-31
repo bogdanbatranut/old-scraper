@@ -1,6 +1,10 @@
 package criteria
 
 import (
+	"fmt"
+	"old-scraper/pkg/config"
+
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +22,18 @@ type SearchCriteriaRepo struct {
 	DB *gorm.DB
 }
 
-func NewSearchCriteriaRepo(db *gorm.DB) *SearchCriteriaRepo {
+func NewSearchCriteriaRepo(cfg config.Config) *SearchCriteriaRepo {
+	dbUserName := cfg.GetString(config.DBUsername)
+	dbPass := cfg.GetString(config.DBPass)
+	dbHost := cfg.GetString(config.DBHost)
+	dbName := cfg.GetString(config.DBName)
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUserName, dbPass, dbHost, dbName)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
 	return &SearchCriteriaRepo{
 		DB: db,
 	}

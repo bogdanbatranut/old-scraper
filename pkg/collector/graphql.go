@@ -1,0 +1,53 @@
+package collector
+
+// https://www.autovit.ro/graphql?
+//operationName=listingScreen
+//&
+//variables=
+//	{"click2BuyExperimentId":"",
+//	"click2BuyExperimentVariant":"",
+//	"experiments":
+//		[
+//		{"key":"MCTA-900","variant":"a"},
+//		{"key":"MCTA-1059","variant":"a"}
+//		],
+//	"filters":
+//		[
+//		{"name":"filter_enum_fuel_type","value":"diesel"}
+//		],
+//	"includeClick2Buy":false,
+//	"includeFiltersCounters":false,
+//	"includePriceEvaluation":true,
+//	"includePromotedAds":false,
+//	"includeRatings":false,
+//	"includeSortOptions":true,
+//	"maxAge":60,
+//	"page":1,
+//	"parameters":
+//		[
+//		"make",
+//		"vat",
+//		"fuel_type",
+//		"mileage",
+//		"engine_capacity",
+//		"engine_code",
+//		"engine_power",
+//		"first_registration_year",
+//		"model",
+//		"version",
+//		"year"
+//		],
+//	"searchTerms":
+//		[
+//		"autoturisme",
+//		"audi",
+//		"a6"
+//		,"de-la-2019"
+//		]
+//	}
+//	&extensions=
+//		{"persistedQuery":
+//			{"sha256Hash":"ea42916db1b919c901d17722dc529de452fa5071e8695743fb2d5378a9dc0315",
+//			"version":1
+//			}
+//		}

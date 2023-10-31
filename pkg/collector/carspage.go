@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"old-scraper/pkg/ads"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chromedp/chromedp"
 	"github.com/gocolly/colly"
 )
 
@@ -121,14 +123,20 @@ func GetCars(sc pagination.Pagination) ([]ads.Ad, bool, bool) {
 		bodyArr = response.Body
 	})
 
-	collector.OnRequest(func(response *colly.Request) {
+	collector.OnRequest(func(request *colly.Request) {
+		err := request.Do()
+		if err != nil {
+
+		}
 		log.Println("On Request: ", sc.ToURL())
 		log.Println("Sleeping...")
 		time.Sleep(2 * time.Second)
 	})
 
-	//collector.Visit("https://www.autovit.ro/autoturisme/volvo/xc-60/de-la-2019?search%5Bfilter_enum_fuel_type%5D=diesel&search%5Bfilter_float_mileage%3Ato%5D=125000")
-	collector.Visit(sc.ToURL())
+	err := collector.Visit(sc.ToURL())
+	if err != nil {
+		return nil, false, false
+	}
 	collector.Wait()
 
 	log.Println("Found : ", len(carAds))
@@ -140,4 +148,22 @@ func GetCars(sc pagination.Pagination) ([]ads.Ad, bool, bool) {
 	}
 	return carAds, isLastPage, hasSeveralPages
 
+}
+
+func fetchWithBrowser(url string) string {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// Navigate to the URL and fetch the rendered HTML
+	var htmlContent string
+	err := chromedp.Run(ctx,
+		chromedp.Navigate(url),
+		chromedp.OuterHTML("html", &htmlContent),
+	)
+	if err != nil {
+		return ""
+	}
+
+	return htmlContent
+	//?https://github.com/go-rod/rod
 }
