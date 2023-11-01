@@ -65,7 +65,15 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 		if err != nil {
 			panic(err)
 		}
+		for _, price := range existingCarAd.Prices {
+			dateStr, err := time.Parse("2006-01-02T15:04:05Z07:00", price.Date)
+			if err != nil {
+				panic(err)
+			}
+			price.Date = dateStr.Format("2006-01-02")
+		}
 		existingCarAd.FirstSeen = fsStr.Format("2006-01-02")
+
 		// we found the ad, so update
 
 		if existingCarAd.ID > 0 {
