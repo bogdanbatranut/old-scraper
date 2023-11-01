@@ -2,9 +2,9 @@
 FROM golang:alpine as builder
 
 # Install Essentials
-#RUN apk update \
-#    && apk add -U --no-cache ca-certificates \
-#    && update-ca-certificates
+RUN apk update \
+    && apk add -U --no-cache ca-certificates \
+    && update-ca-certificates
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
@@ -20,5 +20,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o graphql cmd/graph
 FROM scratch
 
 COPY --from=builder /app/graphql .
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ENTRYPOINT ["./graphql"]
