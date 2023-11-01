@@ -63,9 +63,12 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 
 		// get ad by autovitID
 		err := a.db.Where("autovit_id", ad.Autovit_id).Preload("Prices").Preload("Seller").Last(&existingCarAd).Error
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			panic(err)
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				panic(err)
+			}
 		}
+
 		// we found the ad, so update
 
 		if existingCarAd.ID > 0 {
