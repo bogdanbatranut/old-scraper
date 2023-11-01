@@ -61,6 +61,11 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 
 		// get ad by autovitID
 		a.db.Where("autovit_id", ad.Autovit_id).Preload("Prices").Preload("Seller").Last(&existingCarAd)
+		fsStr, err := time.Parse("2006-01-02T15:04:05Z07:00", existingCarAd.FirstSeen)
+		if err != nil {
+			panic(err)
+		}
+		existingCarAd.FirstSeen = fsStr.Format("2006-01-02")
 		// we found the ad, so update
 
 		if existingCarAd.ID > 0 {
