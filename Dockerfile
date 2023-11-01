@@ -2,9 +2,9 @@
 FROM golang:alpine as builder
 
 # Install Essentials
-RUN apk update \
-    && apk add -U --no-cache ca-certificates \
-    && update-ca-certificates
+#RUN apk update \
+#    && apk add -U --no-cache ca-certificates \
+#    && update-ca-certificates
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
