@@ -157,6 +157,13 @@ func (a AutovitRepository) DisableActiveAds(ads []ads.Ad, criteria criteria.Sear
 					panic(err)
 				}
 				existingCarAd.FirstSeen = fsStr.Format("2006-01-02")
+
+				patStr, err := time.Parse("2006-01-02T15:04:05Z07:00", existingCarAd.ProcessedAt)
+				if err != nil {
+					panic(err)
+				}
+				existingCarAd.ProcessedAt = patStr.Format("2006-01-02")
+
 				today := time.Now().Format("2006-01-02")
 				existingCarAd.LastSeen = &today
 				a.db.Table("cars").Save(existingCarAd)
