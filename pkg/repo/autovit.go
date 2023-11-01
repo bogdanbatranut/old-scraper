@@ -76,7 +76,6 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 			}
 			price.Date = dateStr.Format("2006-01-02")
 			newPrices = append(newPrices, price)
-			log.Println(fmt.Sprintf("%+v", existingCarAd))
 		}
 		existingCarAd.Prices = newPrices
 
