@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"old-scraper/pkg/ads"
@@ -61,27 +62,30 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 		}
 
 		// get ad by autovitID
-		a.db.Where("autovit_id", ad.Autovit_id).Preload("Prices").Preload("Seller").Last(&existingCarAd)
-		fsStr, err := time.Parse("2006-01-02T15:04:05Z07:00", existingCarAd.FirstSeen)
-		if err != nil {
+		err := a.db.Where("autovit_id", ad.Autovit_id).Preload("Prices").Preload("Seller").Last(&existingCarAd).Error
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			panic(err)
 		}
-		existingCarAd.FirstSeen = fsStr.Format("2006-01-02")
-
-		var newPrices []dbmodels.Price
-		for _, price := range existingCarAd.Prices {
-			dateStr, err := time.Parse("2006-01-02T15:04:05Z07:00", price.Date)
-			if err != nil {
-				panic(err)
-			}
-			price.Date = dateStr.Format("2006-01-02")
-			newPrices = append(newPrices, price)
-		}
-		existingCarAd.Prices = newPrices
-
 		// we found the ad, so update
 
 		if existingCarAd.ID > 0 {
+
+			fsStr, err := time.Parse("2006-01-02T15:04:05Z07:00", existingCarAd.FirstSeen)
+			if err != nil {
+				panic(err)
+			}
+			existingCarAd.FirstSeen = fsStr.Format("2006-01-02")
+
+			var newPrices []dbmodels.Price
+			for _, price := range existingCarAd.Prices {
+				dateStr, err := time.Parse("2006-01-02T15:04:05Z07:00", price.Date)
+				if err != nil {
+					panic(err)
+				}
+				price.Date = dateStr.Format("2006-01-02")
+				newPrices = append(newPrices, price)
+			}
+			existingCarAd.Prices = newPrices
 
 			existingCarAd.ProcessedAt = today
 			existingCarAd.Fuel = ad.Fuel
@@ -145,6 +149,11 @@ func (a AutovitRepository) DisableActiveAds(ads []ads.Ad, criteria criteria.Sear
 		if !found {
 			if existingCarAd.Active {
 				existingCarAd.Active = false
+				fsStr, err := time.Parse("2006-01-02T15:04:05Z07:00", existingCarAd.FirstSeen)
+				if err != nil {
+					panic(err)
+				}
+				existingCarAd.FirstSeen = fsStr.Format("2006-01-02")
 				today := time.Now().Format("2006-01-02")
 				existingCarAd.LastSeen = &today
 				a.db.Table("cars").Save(existingCarAd)
