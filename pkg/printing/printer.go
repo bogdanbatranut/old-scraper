@@ -104,17 +104,17 @@ func PrintCar(title string, car dbmodels.Car) {
 }
 
 func PrintCarPriceHistory(priceDiffInfo PriceDiffHistory) string {
-	colorValue := 0
-	if priceDiffInfo.PriceDiff > 0 {
-		colorValue = 31
-	}
-	if priceDiffInfo.PriceDiff < 0 {
-		colorValue = 32
-	}
+	//colorValue := 0
+	//if priceDiffInfo.PriceDiff > 0 {
+	//	colorValue = 31
+	//}
+	//if priceDiffInfo.PriceDiff < 0 {
+	//	colorValue = 32
+	//}
 
 	//priceEvolution := fmt.Sprintf("\x1b[%dm%d\x1b[0m", colorValue, priceDiffInfo.PriceDiff)
-	priceEvolution := fmt.Sprintf("\x1b[%dm%d\033[0m", colorValue, priceDiffInfo.PriceDiff)
-	priceFormatStr := fmt.Sprintf("Price : %s", priceEvolution)
+	//priceEvolution := fmt.Sprintf("\x1b[%dm%d\033[0m", colorValue, priceDiffInfo.PriceDiff)
+	priceFormatStr := fmt.Sprintf("Price : %d", priceDiffInfo.PriceDiff)
 
 	priceStr := fmt.Sprintf("| %-129s|\n", priceFormatStr)
 	delimiter := " =========================================================================================================================\n"
