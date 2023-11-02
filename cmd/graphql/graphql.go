@@ -15,6 +15,7 @@ import (
 	"old-scraper/pkg/dbmodels"
 	"old-scraper/pkg/notifications"
 	"old-scraper/pkg/repo"
+	results2 "old-scraper/pkg/results"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -71,6 +72,7 @@ func main() {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/start", start(scRepo, autovitRepo, criteriaNotificationService, cfg)).Methods("GET")
 	r.HandleFunc("/startcriteria/{id}", startCriteria(scRepo, autovitRepo, criteriaNotificationService, cfg)).Methods("GET")
+	r.HandleFunc("/results", results(autovitRepo)).Methods("GET")
 
 	port := cfg.GetString(config.HTTPPort)
 
@@ -94,6 +96,12 @@ func main() {
 	}()
 
 	<-done
+}
+
+func results(autovitRepo *repo.AutovitRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(results2.GetPriceEvolution(autovitRepo)))
+	}
 }
 
 func start(criteriaRepo *criteria.SearchCriteriaRepo, autovitRepo *repo.AutovitRepository, criteriaNotificationService *notifications.NotificationsService, cfg config.Config) http.HandlerFunc {

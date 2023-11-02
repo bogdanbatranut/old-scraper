@@ -33,6 +33,12 @@ func NewAutovitRepository(cfg config.Config) *AutovitRepository {
 	return &AutovitRepository{db: db}
 }
 
+func (a AutovitRepository) GetActiveAds() *[]dbmodels.Car {
+	var activeAds []dbmodels.Car
+	a.db.Model(&dbmodels.Car{}).Preload("Prices").Preload("Seller").Where(&dbmodels.Car{Active: true}).Find(&activeAds)
+	return &activeAds
+}
+
 func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 	today := time.Now().Format("2006-01-02")
 	for _, ad := range ads {

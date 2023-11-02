@@ -1,7 +1,7 @@
 services:
   autovit-scraper:
     build:
-      dockerfile: Dockerfile
+      dockerfile: ./cmd/graphql/Dockerfile
     ports:
       - "3333:3333"
     environment:
@@ -14,3 +14,21 @@ services:
       - NTFY_PORT=3111
       - NTFY_SERVICE_STATUS_TOPIC=serviceStatus
       - APP_URL=www.dev.auto-mall.ro:3333
+  autovit-http:
+    build:
+      dockerfile: ./cmd/http/Dockerfile
+    ports:
+      - "3334:3334"
+    environment:
+      - DB_USERNAME=dev
+      - DB_PASS=siana1316
+      - DB_HOST=dev.auto-mall.ro
+      - DB_NAME=autovit
+      - HTTP_PORT=3333
+      - NTFY_HOST=dev.auto-mall.ro
+      - NTFY_PORT=3111
+      - NTFY_SERVICE_STATUS_TOPIC=serviceStatus
+      - APP_URL=www.dev.auto-mall.ro:3333
+#  cron:
+#    build:
+#      dockerfile: ./cmd/cron/Dockerfile
