@@ -46,7 +46,7 @@ func PrintAd(car dbmodels.Car, title string) {
 
 }
 
-func PrintCar(title string, car dbmodels.Car) {
+func PrintCar(title string, car dbmodels.Car) string {
 	initialPrice := car.Prices[0].Price
 	lastPrice := car.Prices[len(car.Prices)-1].Price
 	totalDiff := lastPrice - initialPrice
@@ -99,7 +99,7 @@ func PrintCar(title string, car dbmodels.Car) {
 
 	titleFStr := fmt.Sprintf("| %-120s|\n", title)
 
-	fmt.Println(fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s%s%s", delimiter, titleFStr, delimiter, priceStr, priceHistory, softDelimiter, carStr, softDelimiter, autovitIDStr, addUrl, seller, delimiter))
+	return fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s%s%s", delimiter, titleFStr, delimiter, priceStr, priceHistory, softDelimiter, carStr, softDelimiter, autovitIDStr, addUrl, seller, delimiter)
 
 }
 

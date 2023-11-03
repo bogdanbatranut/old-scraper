@@ -178,3 +178,12 @@ func (a AutovitRepository) DisableActiveAds(ads []ads.Ad, criteria criteria.Sear
 	}
 	return nil
 }
+
+func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
+	var cars []dbmodels.Car
+	a.db.Debug().Preload("Prices").Preload("Seller").Where(dbmodels.Car{
+		LastSeen: &day,
+		Active:   false,
+	}).Find(&cars)
+	return cars
+}

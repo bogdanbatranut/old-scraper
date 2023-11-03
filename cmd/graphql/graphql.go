@@ -14,11 +14,13 @@ import (
 	"old-scraper/pkg/criteria"
 	"old-scraper/pkg/dbmodels"
 	"old-scraper/pkg/notifications"
+	"old-scraper/pkg/printing"
 	"old-scraper/pkg/repo"
 	results2 "old-scraper/pkg/results"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -73,6 +75,7 @@ func main() {
 	r.HandleFunc("/start", start(scRepo, autovitRepo, criteriaNotificationService, cfg)).Methods("GET")
 	r.HandleFunc("/startcriteria/{id}", startCriteria(scRepo, autovitRepo, criteriaNotificationService, cfg)).Methods("GET")
 	r.HandleFunc("/results", results(autovitRepo)).Methods("GET")
+	r.HandleFunc("/sold/{date}", sold(autovitRepo)).Methods("GET")
 
 	port := cfg.GetString(config.HTTPPort)
 
@@ -98,10 +101,44 @@ func main() {
 	<-done
 }
 
+func sold(repo *repo.AutovitRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		date := getDate(w, r)
+		w.Write([]byte(getSoldCars(date, repo)))
+	}
+}
+
 func results(autovitRepo *repo.AutovitRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(results2.GetPriceEvolution(autovitRepo)))
 	}
+}
+
+func getSoldCarsToday(repository *repo.AutovitRepository) string {
+	today := time.Now().Format("2006-01-02")
+	return getSoldCars(today, repository)
+}
+
+func getSoldCars(day string, repository *repo.AutovitRepository) string {
+	cars := repository.GetInactiveAdsInDay(day)
+	result := ""
+	for _, car := range cars {
+		dateString := car.FirstSeen
+		firstDayOfAd, err := time.Parse("2006-01-02T15:04:05-07:00", dateString)
+		if err != nil {
+			panic(err)
+		}
+		lastDayOfAd, err := time.Parse("2006-01-02T15:04:05-07:00", *car.LastSeen)
+		if err != nil {
+			panic(err)
+		}
+
+		difference := lastDayOfAd.Sub(firstDayOfAd)
+		diffStr := fmt.Sprintf("Days on autovit: %d", int64(difference.Hours()/24))
+
+		result = result + printing.PrintCar(fmt.Sprintf("SOLD !!! - %s - %s", day, diffStr), car)
+	}
+	return result
 }
 
 func start(criteriaRepo *criteria.SearchCriteriaRepo, autovitRepo *repo.AutovitRepository, criteriaNotificationService *notifications.NotificationsService, cfg config.Config) http.HandlerFunc {
@@ -407,4 +444,24 @@ func getID(w http.ResponseWriter, r *http.Request) uint64 {
 	}
 
 	return id
+}
+
+func getDate(w http.ResponseWriter, r *http.Request) string {
+	vars := mux.Vars(r)
+	dateStr, ok := vars["date"]
+	if !ok {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+	}
+	if dateStr == "today" {
+		return getToday()
+	}
+	isDate := regexp.MustCompile(`^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$`).MatchString(dateStr)
+	if !isDate {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+	}
+	return dateStr
+}
+
+func getToday() string {
+	return time.Now().Format("2006-01-02")
 }
