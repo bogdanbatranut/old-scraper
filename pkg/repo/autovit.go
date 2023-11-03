@@ -185,6 +185,7 @@ func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
 		LastSeen: &day,
 		Active:   false,
 	}).Find(&cars)
+	return cars
 	var processedCars []dbmodels.Car
 
 	for _, car := range cars {
@@ -206,6 +207,7 @@ func dbParseCarTimes(car *dbmodels.Car) *dbmodels.Car {
 }
 
 func dbParseTime(dbTime *string) *string {
+	log.Println("parsing time : ", *dbTime)
 	if dbTime == nil {
 		return nil
 	}
