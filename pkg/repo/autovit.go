@@ -185,7 +185,7 @@ func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
 		LastSeen: &day,
 		Active:   false,
 	}).Find(&cars)
-	return cars
+	//return cars
 	var processedCars []dbmodels.Car
 
 	for _, car := range cars {
