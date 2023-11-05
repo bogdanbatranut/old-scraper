@@ -123,6 +123,7 @@ func getSoldCars(day string, repository *repo.AutovitRepository) string {
 	cars := repository.GetInactiveAdsInDay(day)
 	result := ""
 	for _, car := range cars {
+
 		dateString := car.FirstSeen
 		firstDayOfAd, err := time.Parse("2006-01-02T15:04:05-07:00", dateString)
 		if err != nil {
@@ -133,6 +134,7 @@ func getSoldCars(day string, repository *repo.AutovitRepository) string {
 			panic(err)
 		}
 
+		//difference := lastDayOfAd.Sub(firstDayOfAd)
 		difference := lastDayOfAd.Sub(firstDayOfAd)
 		diffStr := fmt.Sprintf("Days on autovit: %d", int64(difference.Hours()/24))
 
