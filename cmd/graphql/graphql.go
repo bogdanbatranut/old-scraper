@@ -125,11 +125,14 @@ func getSoldCars(day string, repository *repo.AutovitRepository) string {
 	for _, car := range cars {
 
 		dateString := car.FirstSeen
-		firstDayOfAd, err := time.Parse("2006-01-02T15:04:05-07:00", dateString)
+		log.Println(fmt.Sprintf("dateString: %+v", dateString))
+		firstDayOfAd, err := time.Parse("2006-01-02T15:04:05Z", dateString)
+		log.Println(fmt.Sprintf("firstDayOfAd: %+v", firstDayOfAd))
+
 		if err != nil {
 			panic(err)
 		}
-		lastDayOfAd, err := time.Parse("2006-01-02T15:04:05-07:00", *car.LastSeen)
+		lastDayOfAd, err := time.Parse("2006-01-02T15:04:05Z", *car.LastSeen)
 		if err != nil {
 			panic(err)
 		}
