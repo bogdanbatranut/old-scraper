@@ -188,13 +188,13 @@ func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
 	//return cars
 	var processedCars []dbmodels.Car
 
-	for _, car := range cars {
-		log.Println(fmt.Sprintf("existing: %+v", car))
-		dbParseCarTimes(&car)
-		log.Println(fmt.Sprintf("after time parse: %+v", car))
-
-		processedCars = append(processedCars, car)
-	}
+	//for _, car := range cars {
+	//	log.Println(fmt.Sprintf("existing: %+v", car))
+	//	dbParseCarTimes(&car)
+	//	log.Println(fmt.Sprintf("after time parse: %+v", car))
+	//
+	//	processedCars = append(processedCars, car)
+	//}
 
 	return processedCars
 }
