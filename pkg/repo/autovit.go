@@ -216,6 +216,7 @@ func dbParseTime(dbTime *string) *string {
 		panic(err)
 	}
 	tf := t.Format("2006-01-02")
+	log.Println("Parsed time: ", fmt.Sprintf("%+v", tf))
 	return &tf
 
 }
