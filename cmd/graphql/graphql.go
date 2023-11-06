@@ -76,6 +76,7 @@ func main() {
 	r.HandleFunc("/startcriteria/{id}", startCriteria(scRepo, autovitRepo, criteriaNotificationService, cfg)).Methods("GET")
 	r.HandleFunc("/results", results(autovitRepo)).Methods("GET")
 	r.HandleFunc("/sold/{date}", sold(autovitRepo)).Methods("GET")
+	r.HandleFunc("/new/{date}", newCars(autovitRepo)).Methods("GET")
 
 	port := cfg.GetString(config.HTTPPort)
 
@@ -101,6 +102,13 @@ func main() {
 	<-done
 }
 
+func newCars(repo *repo.AutovitRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		date := getDate(w, r)
+		w.Write([]byte(getNewCars(date, repo)))
+	}
+}
+
 func sold(repo *repo.AutovitRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		date := getDate(w, r)
@@ -114,13 +122,27 @@ func results(autovitRepo *repo.AutovitRepository) http.HandlerFunc {
 	}
 }
 
+func getNewCarsToday(repository *repo.AutovitRepository) string {
+	today := time.Now().Format("2006-01-02")
+	return getNewCars(today, repository)
+}
+
 func getSoldCarsToday(repository *repo.AutovitRepository) string {
 	today := time.Now().Format("2006-01-02")
 	return getSoldCars(today, repository)
 }
 
-func getSoldCars(day string, repository *repo.AutovitRepository) string {
+func getNewCars(day string, repository *repo.AutovitRepository) string {
 	cars := repository.GetInactiveAdsInDay(day)
+	result := ""
+	for _, car := range cars {
+		result = result + printing.PrintCar(fmt.Sprintf("NEW CAR!!! "), car)
+	}
+	return result
+}
+
+func getSoldCars(day string, repository *repo.AutovitRepository) string {
+	cars := repository.GetNewAdsInDay(day)
 	result := ""
 	for _, car := range cars {
 
@@ -141,7 +163,7 @@ func getSoldCars(day string, repository *repo.AutovitRepository) string {
 		difference := lastDayOfAd.Sub(firstDayOfAd)
 		diffStr := fmt.Sprintf("Days on autovit: %d", int64(difference.Hours()/24))
 
-		result = result + printing.PrintCar(fmt.Sprintf("SOLD !!! - %s - %s", day, diffStr), car)
+		result = result + printing.PrintCar(fmt.Sprintf("NEW !!! - %s - %s", day, diffStr), car)
 	}
 	return result
 }

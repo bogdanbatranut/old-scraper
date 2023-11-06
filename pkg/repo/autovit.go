@@ -185,38 +185,14 @@ func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
 		LastSeen: &day,
 		Active:   false,
 	}).Find(&cars)
-	//return cars
-	//var processedCars []dbmodels.Car
-
-	//for _, car := range cars {
-	//	log.Println(fmt.Sprintf("existing: %+v", car))
-	//	dbParseCarTimes(&car)
-	//	log.Println(fmt.Sprintf("after time parse: %+v", car))
-	//
-	//	processedCars = append(processedCars, car)
-	//}
-
 	return cars
 }
 
-func dbParseCarTimes(car *dbmodels.Car) *dbmodels.Car {
-	car.FirstSeen = *dbParseTime(&car.FirstSeen)
-	car.ProcessedAt = *dbParseTime(&car.ProcessedAt)
-	car.LastSeen = dbParseTime(car.LastSeen)
-	return car
-}
-
-func dbParseTime(dbTime *string) *string {
-	log.Println("parsing time : ", *dbTime)
-	if dbTime == nil {
-		return nil
-	}
-	t, err := time.Parse("2006-01-02T15:04:05Z07:00", *dbTime)
-	if err != nil {
-		panic(err)
-	}
-	tf := t.Format("2006-01-02")
-	log.Println("Parsed time: ", fmt.Sprintf("%+v", tf))
-	return &tf
-
+func (a AutovitRepository) GetNewAdsInDay(day string) []dbmodels.Car {
+	var cars []dbmodels.Car
+	a.db.Debug().Preload("Prices").Preload("Seller").Where(dbmodels.Car{
+		FirstSeen: day,
+		Active:    true,
+	}).Find(&cars)
+	return cars
 }
