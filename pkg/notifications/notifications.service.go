@@ -30,6 +30,13 @@ func (s NotificationsService) PushSuccessNotification(text string) {
 	http.DefaultClient.Do(req)
 }
 
+func (s NotificationsService) PushSuccessNotificationWithAction(text string, actionURL string) {
+	req, _ := http.NewRequest("POST", s.URL, strings.NewReader(text))
+	req.Header.Set("Tags", "+1")
+	req.Header.Set("Click", actionURL)
+	http.DefaultClient.Do(req)
+}
+
 func (s NotificationsService) PushErrNotification(text string) {
 	req, _ := http.NewRequest("POST", s.URL, strings.NewReader(text))
 	req.Header.Set("Tags", "warning")

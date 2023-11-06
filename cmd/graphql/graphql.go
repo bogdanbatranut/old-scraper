@@ -77,7 +77,7 @@ func main() {
 	r.HandleFunc("/results", results(autovitRepo)).Methods("GET")
 	r.HandleFunc("/sold/{date}", sold(autovitRepo)).Methods("GET")
 	r.HandleFunc("/new/{date}", newCars(autovitRepo)).Methods("GET")
-	r.HandleFunc("/cars/{brand}", getCars(autovitRepo)).Methods("GET")
+	r.HandleFunc("/cars/{brand}/{model}", getCars(autovitRepo)).Methods("GET")
 
 	port := cfg.GetString(config.HTTPPort)
 
@@ -105,8 +105,9 @@ func main() {
 
 func getCars(repo *repo.AutovitRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		brand := getCarParam(w, r)
-		w.Write([]byte(getCarsByBrand(brand, repo)))
+		brand := getCarBrandParam(w, r)
+		model := getCarModelParam(w, r)
+		w.Write([]byte(getCarsByBrandAndModel(brand, model, repo)))
 	}
 }
 
@@ -140,8 +141,8 @@ func getSoldCarsToday(repository *repo.AutovitRepository) string {
 	return getSoldCars(today, repository)
 }
 
-func getCarsByBrand(brand string, repository *repo.AutovitRepository) string {
-	cars := repository.GetActiveAdsByBrand(brand)
+func getCarsByBrandAndModel(brand string, model string, repository *repo.AutovitRepository) string {
+	cars := repository.GetActiveAdsByBrand(brand, model)
 	result := ""
 	for _, car := range cars {
 		result = result + printing.PrintCar(fmt.Sprintf("CAR "), car)
@@ -191,19 +192,21 @@ func start(criteriaRepo *criteria.SearchCriteriaRepo, autovitRepo *repo.AutovitR
 		criterias := criteriaRepo.GetCriterias()
 
 		for _, criteria := range *criterias {
+			criteriaActionURL := fmt.Sprintf("htt://%s/%s/%s", cfg.GetString(config.AppURL), criteria.Brand, criteria.Model)
+
 			if criteria.Model == "gle_classe" {
 				criteria.Model = "gle"
 			}
 			if criteria.Model == "e_classe" {
 				criteria.Model = "e"
 			}
-			log.Println(fmt.Sprintf("-------Criteria : %s %s ", criteria.Brand, criteria.Model))
+			//log.Println(fmt.Sprintf("-------Criteria : %s %s ", criteria.Brand, criteria.Model))
 			totalCars, err := getCriteriaResults(criteria, autovitRepo, criteriaNotificationService, cfg)
 			if err != nil {
 				continue
 			}
 			criteriaEndMessage := fmt.Sprintf("Done with criteria: %s %s found ads: %d", criteria.Brand, criteria.Model, totalCars)
-			criteriaNotificationService.PushSuccessNotification(criteriaEndMessage)
+			criteriaNotificationService.PushSuccessNotificationWithAction(criteriaEndMessage, criteriaActionURL)
 			// write criteria results to db
 
 		}
@@ -506,9 +509,18 @@ func getDate(w http.ResponseWriter, r *http.Request) string {
 	return dateStr
 }
 
-func getCarParam(w http.ResponseWriter, r *http.Request) string {
+func getCarBrandParam(w http.ResponseWriter, r *http.Request) string {
 	vars := mux.Vars(r)
 	carMakeStr, ok := vars["brand"]
+	if !ok {
+		http.Error(w, "invalid parameter", http.StatusBadRequest)
+	}
+	return carMakeStr
+}
+
+func getCarModelParam(w http.ResponseWriter, r *http.Request) string {
+	vars := mux.Vars(r)
+	carMakeStr, ok := vars["model"]
 	if !ok {
 		http.Error(w, "invalid parameter", http.StatusBadRequest)
 	}

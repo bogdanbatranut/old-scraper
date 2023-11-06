@@ -68,16 +68,16 @@ func PrintCar(title string, car dbmodels.Car) string {
 	ph.AutovitID = car.Autovit_id
 	ph.AdURL = car.Ad_url
 	//evolutionSymbolStr := " = "
-	colorValue := 0
-	if ph.PriceDiff > 0 {
-		colorValue = 31
-	}
-	if ph.PriceDiff < 0 {
-		colorValue = 32
-	}
+	//colorValue := 0
+	//if ph.PriceDiff > 0 {
+	//	colorValue = 31
+	//}
+	//if ph.PriceDiff < 0 {
+	//	colorValue = 32
+	//}
 
-	priceEvolution := fmt.Sprintf("\x1b[%dm%d\x1b[0m", colorValue, ph.PriceDiff)
-	priceFormatStr := fmt.Sprintf("Price difference : %s", priceEvolution)
+	//priceEvolution := fmt.Sprintf("\x1b[%dm%d\x1b[0m", colorValue, ph.PriceDiff)
+	priceFormatStr := fmt.Sprintf("Price difference : %d", ph.PriceDiff)
 
 	priceStr := fmt.Sprintf("| %-127s|\n", priceFormatStr)
 	delimiter := " =========================================================================================================================\n"

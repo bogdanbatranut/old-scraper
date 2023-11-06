@@ -197,11 +197,12 @@ func (a AutovitRepository) GetNewAdsInDay(day string) []dbmodels.Car {
 	return cars
 }
 
-func (a AutovitRepository) GetActiveAdsByBrand(make string) []dbmodels.Car {
+func (a AutovitRepository) GetActiveAdsByBrand(brand string, model string) []dbmodels.Car {
 	var cars []dbmodels.Car
 	a.db.Debug().Preload("Prices").Preload("Seller").Where(dbmodels.Car{
-		Brand:  make,
-		Active: true,
+		Brand:    brand,
+		CarModel: model,
+		Active:   true,
 	}).Find(&cars)
 	return cars
 }
