@@ -77,6 +77,7 @@ func main() {
 	r.HandleFunc("/results", results(autovitRepo)).Methods("GET")
 	r.HandleFunc("/sold/{date}", sold(autovitRepo)).Methods("GET")
 	r.HandleFunc("/new/{date}", newCars(autovitRepo)).Methods("GET")
+	r.HandleFunc("/cars/{brand}", getCars(autovitRepo)).Methods("GET")
 
 	port := cfg.GetString(config.HTTPPort)
 
@@ -100,6 +101,13 @@ func main() {
 	}()
 
 	<-done
+}
+
+func getCars(repo *repo.AutovitRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		brand := getCarParam(w, r)
+		w.Write([]byte(getCarsByBrand(brand, repo)))
+	}
 }
 
 func newCars(repo *repo.AutovitRepository) http.HandlerFunc {
@@ -130,6 +138,15 @@ func getNewCarsToday(repository *repo.AutovitRepository) string {
 func getSoldCarsToday(repository *repo.AutovitRepository) string {
 	today := time.Now().Format("2006-01-02")
 	return getSoldCars(today, repository)
+}
+
+func getCarsByBrand(brand string, repository *repo.AutovitRepository) string {
+	cars := repository.GetActiveAdsByBrand(brand)
+	result := ""
+	for _, car := range cars {
+		result = result + printing.PrintCar(fmt.Sprintf("CAR "), car)
+	}
+	return result
 }
 
 func getNewCars(day string, repository *repo.AutovitRepository) string {
@@ -487,6 +504,15 @@ func getDate(w http.ResponseWriter, r *http.Request) string {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 	}
 	return dateStr
+}
+
+func getCarParam(w http.ResponseWriter, r *http.Request) string {
+	vars := mux.Vars(r)
+	carMakeStr, ok := vars["brand"]
+	if !ok {
+		http.Error(w, "invalid parameter", http.StatusBadRequest)
+	}
+	return carMakeStr
 }
 
 func getToday() string {
