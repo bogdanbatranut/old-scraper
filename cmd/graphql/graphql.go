@@ -142,7 +142,7 @@ func getNewCars(day string, repository *repo.AutovitRepository) string {
 }
 
 func getSoldCars(day string, repository *repo.AutovitRepository) string {
-	cars := repository.GetNewAdsInDay(day)
+	cars := repository.GetInactiveAdsInDay(day)
 	result := ""
 	for _, car := range cars {
 
