@@ -192,7 +192,7 @@ func start(criteriaRepo *criteria.SearchCriteriaRepo, autovitRepo *repo.AutovitR
 		criterias := criteriaRepo.GetCriterias()
 
 		for _, criteria := range *criterias {
-			criteriaActionURL := fmt.Sprintf("htt://%s/%s/%s", cfg.GetString(config.AppURL), criteria.Brand, criteria.Model)
+			criteriaActionURL := fmt.Sprintf("http://%s/%s/%s", cfg.GetString(config.AppURL), criteria.Brand, criteria.Model)
 
 			if criteria.Model == "gle_classe" {
 				criteria.Model = "gle"
