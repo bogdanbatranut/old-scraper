@@ -271,7 +271,7 @@ func getCriteriaResults(sc criteria.SearchCriteria, repo *repo.AutovitRepository
 	firstResult := getCriteriaPageResults(sc, page)
 	foundCars = append(foundCars, firstResult.GetCarAds()...)
 	paginationInfo = getPaginationInfoFromResponse(firstResult)
-	log.Println(paginationInfo)
+	//log.Println(paginationInfo)
 
 	for paginationInfo.pageSize+paginationInfo.currentOffset < paginationInfo.totalCount {
 		page++

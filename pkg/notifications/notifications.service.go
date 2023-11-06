@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"log"
 	"net/http"
 	"old-scraper/pkg/dbmodels"
 	"strings"
@@ -34,6 +35,7 @@ func (s NotificationsService) PushSuccessNotificationWithAction(text string, act
 	req, _ := http.NewRequest("POST", s.URL, strings.NewReader(text))
 	req.Header.Set("Tags", "+1")
 	req.Header.Set("Click", actionURL)
+	log.Println("Notification Action URL: ", actionURL)
 	http.DefaultClient.Do(req)
 }
 

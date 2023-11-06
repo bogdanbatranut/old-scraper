@@ -3,7 +3,6 @@ package repo
 import (
 	"errors"
 	"fmt"
-	"log"
 	"old-scraper/pkg/ads"
 	"old-scraper/pkg/config"
 	"old-scraper/pkg/criteria"
@@ -101,7 +100,6 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 			existingCarAd.Active = true
 			existingCarAd.LastSeen = nil
 			existingCarAd.Seller = seller
-			log.Println(fmt.Sprintf("-> %+v", existingCarAd))
 			a.db.Save(&existingCarAd)
 			if len(existingCarAd.Prices) == 0 {
 				// no prices so might be the first price
