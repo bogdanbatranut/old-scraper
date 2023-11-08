@@ -179,7 +179,7 @@ func (a AutovitRepository) DisableActiveAds(ads []ads.Ad, criteria criteria.Sear
 
 func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
 	var cars []dbmodels.Car
-	a.db.Debug().Preload("Prices").Preload("Seller").Where(dbmodels.Car{
+	a.db.Preload("Prices").Preload("Seller").Where(dbmodels.Car{
 		LastSeen: &day,
 		Active:   false,
 	}).Find(&cars)
@@ -188,7 +188,7 @@ func (a AutovitRepository) GetInactiveAdsInDay(day string) []dbmodels.Car {
 
 func (a AutovitRepository) GetNewAdsInDay(day string) []dbmodels.Car {
 	var cars []dbmodels.Car
-	a.db.Debug().Preload("Prices").Preload("Seller").Where(dbmodels.Car{
+	a.db.Preload("Prices").Preload("Seller").Where(dbmodels.Car{
 		FirstSeen: day,
 		Active:    true,
 	}).Find(&cars)
@@ -197,7 +197,7 @@ func (a AutovitRepository) GetNewAdsInDay(day string) []dbmodels.Car {
 
 func (a AutovitRepository) GetActiveAdsByBrand(brand string, model string) []dbmodels.Car {
 	var cars []dbmodels.Car
-	a.db.Debug().Preload("Prices").Preload("Seller").Where(dbmodels.Car{
+	a.db.Preload("Prices").Preload("Seller").Where(dbmodels.Car{
 		Brand:    brand,
 		CarModel: model,
 		Active:   true,

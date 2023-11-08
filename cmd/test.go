@@ -71,5 +71,5 @@ func main() {
 
 	db.Where("autovit_id", 11111).Preload("Prices").Preload("Seller").Last(&existingCarAd)
 
-	log.Println(existingCarAd)
+	//log.Println(existingCarAd)
 }

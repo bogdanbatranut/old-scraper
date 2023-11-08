@@ -165,9 +165,9 @@ func getSoldCars(day string, repository *repo.AutovitRepository) string {
 	for _, car := range cars {
 
 		dateString := car.FirstSeen
-		log.Println(fmt.Sprintf("dateString: %+v", dateString))
+		//log.Println(fmt.Sprintf("dateString: %+v", dateString))
 		firstDayOfAd, err := time.Parse("2006-01-02T15:04:05Z", dateString)
-		log.Println(fmt.Sprintf("firstDayOfAd: %+v", firstDayOfAd))
+		//log.Println(fmt.Sprintf("firstDayOfAd: %+v", firstDayOfAd))
 
 		if err != nil {
 			panic(err)
@@ -332,7 +332,7 @@ func upsertExistingCarAds(foundCarAds []ads.Ad, db *gorm.DB, today string) map[s
 	for _, carAd := range foundCarAds {
 		carAd.ProcessedAt = today
 		var existingCarAd dbmodels.Car
-		log.Println("finding autovitid ", carAd.Autovit_id)
+		//log.Println("finding autovitid ", carAd.Autovit_id)
 		errNotFound := db.Where("autovit_id", carAd.Autovit_id).Preload("Prices").Preload("Seller").Last(&existingCarAd).Error
 
 		if errors.Is(errNotFound, gorm.ErrRecordNotFound) {
