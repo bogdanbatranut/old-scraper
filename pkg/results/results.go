@@ -20,16 +20,19 @@ func GetPriceEvolution(repo *repo.AutovitRepository) string {
 		lastPrice := car.Prices[len(car.Prices)-1].Price
 		totalDiff := lastPrice - initialPrice
 
+		discount := float32(totalDiff) / float32(initialPrice) * 100
+
 		if totalDiff >= 0 {
 			continue
 		}
 
 		ph := printing.PriceDiffHistory{
-			PriceDiff:   totalDiff,
-			OlderPrices: nil,
-			Car:         "",
-			AutovitID:   0,
-			AdURL:       "",
+			DiscountPercent: discount,
+			PriceDiff:       totalDiff,
+			OlderPrices:     nil,
+			Car:             "",
+			AutovitID:       0,
+			AdURL:           "",
 		}
 
 		for _, price := range car.Prices {
@@ -55,7 +58,8 @@ func GetPriceEvolution(repo *repo.AutovitRepository) string {
 		result = fmt.Sprintf("=========================================================\n" + "no price changes detected...\n" + "=========================================================")
 	} else {
 		sort.Slice(priceHistory, func(i, j int) bool {
-			return priceHistory[i].PriceDiff < priceHistory[j].PriceDiff
+			//return priceHistory[i].PriceDiff < priceHistory[j].PriceDiff
+			return priceHistory[i].DiscountPercent < priceHistory[j].DiscountPercent
 		})
 
 		for _, ph := range priceHistory {

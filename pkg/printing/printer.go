@@ -6,12 +6,13 @@ import (
 )
 
 type PriceDiffHistory struct {
-	PriceDiff   int
-	OlderPrices []string
-	Car         string
-	AutovitID   int
-	AdURL       string
-	Seller      *string
+	DiscountPercent float32
+	PriceDiff       int
+	OlderPrices     []string
+	Car             string
+	AutovitID       int
+	AdURL           string
+	Seller          *string
 }
 
 func PrintAd(car dbmodels.Car, title string) {
@@ -114,7 +115,7 @@ func PrintCarPriceHistory(priceDiffInfo PriceDiffHistory) string {
 
 	//priceEvolution := fmt.Sprintf("\x1b[%dm%d\x1b[0m", colorValue, priceDiffInfo.PriceDiff)
 	//priceEvolution := fmt.Sprintf("\x1b[%dm%d\033[0m", colorValue, priceDiffInfo.PriceDiff)
-	priceFormatStr := fmt.Sprintf("Price : %d", priceDiffInfo.PriceDiff)
+	priceFormatStr := fmt.Sprintf("Price : %d Discount: %.2f", priceDiffInfo.PriceDiff, priceDiffInfo.DiscountPercent)
 
 	priceStr := fmt.Sprintf("| %-129s|\n", priceFormatStr)
 	delimiter := " =========================================================================================================================\n"
