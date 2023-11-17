@@ -139,9 +139,34 @@ func (a AutovitRepository) UpsertCarAds(ads []ads.Ad) *[]dbmodels.Car {
 	return nil
 }
 
+func (a AutovitRepository) FixDisabledCars(ads []ads.Ad, criteria criteria.SearchCriteria) error {
+	var existingAds []dbmodels.Car
+	if criteria.Model == "gle" {
+		criteria.Model = "gle_classe"
+	}
+	if criteria.Model == "e" {
+		criteria.Model = "e_classe"
+	}
+	a.db.Debug().Table("cars").
+		Where(&dbmodels.Car{Brand: criteria.Brand, CarModel: criteria.Model, Fuel: criteria.Fuel}).
+		Where("active = ?", false).
+		Where("year >= ?", criteria.YearFrom).
+		Where("km <= ?", criteria.MileageTo).Find(&existingAds)
+	for _, existingCarAd := range existingAds {
+		for _, foundCarAd := range ads {
+			if foundCarAd.Autovit_id == existingCarAd.Autovit_id {
+				existingCarAd.LastSeen = nil
+				existingCarAd.Active = true
+				a.db.Table("cars").Save(&existingCarAd)
+			}
+		}
+	}
+	return nil
+}
+
 func (a AutovitRepository) DisableActiveAds(ads []ads.Ad, criteria criteria.SearchCriteria) error {
 	var existingAds []dbmodels.Car
-	a.db.Table("cars").
+	a.db.Debug().Table("cars").
 		Where(&dbmodels.Car{Active: true, Brand: criteria.Brand, CarModel: criteria.Model, Fuel: criteria.Fuel}).
 		Where("year >= ?", criteria.YearFrom).Where("km <= ?", criteria.MileageTo).Find(&existingAds)
 

@@ -305,6 +305,7 @@ type CarNode struct {
 }
 
 func (cn CarNode) ToCarAd() *ads.Ad {
+
 	carAd := ads.Ad{
 		Brand:       *getMake(cn.Parameters),
 		Model:       *getModel(cn.Parameters),
@@ -336,6 +337,10 @@ func getMake(params []Parameter) *string {
 func getModel(params []Parameter) *string {
 	for _, param := range params {
 		if param.Key == "model" {
+			if param.DisplayValue == "GLE" {
+				s := "gle_classe"
+				return &s
+			}
 			return &param.DisplayValue
 		}
 	}
